@@ -1,5 +1,6 @@
 use ggez::{
 	graphics,
+	graphics::Color,
 	nalgebra::{Point2, Vector2},
 	Context, GameResult,
 };
@@ -8,6 +9,7 @@ use rand::prelude::*;
 struct Particle {
 	lifetime: f32,
 	sizes: Vec<f32>,
+	colors: Vec<Color>,
 	time: f32,
 	x: f32,
 	y: f32,
@@ -25,7 +27,7 @@ impl Particle {
 
 	fn get_size(&self) -> f32 {
 		if self.sizes.len() == 1 {
-			return self.sizes[1];
+			return self.sizes[0];
 		}
 		let size_index = self.time * (self.sizes.len() - 1) as f32;
 		let size_index_a = size_index.floor() as usize;
@@ -34,6 +36,24 @@ impl Particle {
 		let size_b = self.sizes[size_index_b];
 		let fraction = size_index % 1.0;
 		return size_a + (size_b - size_a) * fraction;
+	}
+
+	fn get_color(&self) -> Color {
+		if self.colors.len() == 1 {
+			return self.colors[0];
+		}
+		let color_index = self.time * (self.colors.len() - 1) as f32;
+		let color_index_a = color_index.floor() as usize;
+		let color_index_b = color_index.ceil() as usize;
+		let color_a = self.colors[color_index_a];
+		let color_b = self.colors[color_index_b];
+		let fraction = color_index % 1.0;
+		return Color::new(
+			color_a.r + (color_b.r - color_a.r) * fraction,
+			color_a.g + (color_b.g - color_a.g) * fraction,
+			color_a.b + (color_b.b - color_a.b) * fraction,
+			color_a.a + (color_b.a - color_a.a) * fraction,
+		);
 	}
 
 	fn draw<D>(&self, ctx: &mut Context, drawable: &D) -> GameResult
@@ -47,7 +67,8 @@ impl Particle {
 			graphics::DrawParam::new()
 				.dest(Point2::new(self.x, self.y))
 				.scale(Vector2::new(size, size))
-				.offset(Point2::new(0.5, 0.5)),
+				.offset(Point2::new(0.5, 0.5))
+				.color(self.get_color()),
 		)
 	}
 }
@@ -67,6 +88,7 @@ where
 	pub angle: f32,
 	pub spread: f32,
 	pub sizes: Vec<f32>,
+	pub colors: Vec<Color>,
 	// internal state
 	rng: ThreadRng,
 	particles: Vec<Particle>,
@@ -90,6 +112,7 @@ where
 			angle: 0.0,
 			spread: std::f32::consts::PI * 2.0,
 			sizes: vec![1.0],
+			colors: vec![graphics::WHITE],
 			rng: thread_rng(),
 			particles: vec![],
 			running: true,
@@ -107,6 +130,7 @@ where
 		for _ in 0..count {
 			self.particles.push(Particle {
 				sizes: self.sizes.clone(),
+				colors: self.colors.clone(),
 				lifetime: self.particle_lifetime,
 				time: 0.0,
 				x: self.x,

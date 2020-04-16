@@ -21,7 +21,11 @@ impl MainState {
 		let mut particle_system = ParticleSystem::new(mesh);
 		particle_system.x = 400.0;
 		particle_system.y = 300.0;
-		particle_system.sizes = vec![2.0, 3.0, 1.0, 4.0, 0.0];
+		particle_system.colors = vec![
+			graphics::Color::new(1.0, 1.0, 1.0, 1.0),
+			graphics::Color::new(1.0, 0.0, 0.0, 2.0 / 3.0),
+			graphics::Color::new(0.0, 0.0, 1.0, 0.0),
+		];
 		particle_system.min_speed = 10.0;
 		particle_system.max_speed = 100.0;
 		particle_system.emit(10);

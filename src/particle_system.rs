@@ -43,6 +43,8 @@ where
 {
 	// configuration
 	drawable: D,
+	x: f32,
+	y: f32,
 	particle_lifetime: f32,
 	emission_rate: f32,
 	lifetime: ParticleSystemLifetime,
@@ -64,6 +66,8 @@ where
 	pub fn new(drawable: D) -> Self {
 		Self {
 			drawable,
+			x: 0.0,
+			y: 0.0,
 			particle_lifetime: 1.0,
 			emission_rate: 10.0,
 			lifetime: ParticleSystemLifetime::Infinite,
@@ -78,6 +82,11 @@ where
 		}
 	}
 
+	pub fn set_position(&mut self, x: f32, y: f32) {
+		self.x = x;
+		self.y = y;
+	}
+
 	pub fn emit(&mut self, count: usize) {
 		let min_angle = self.angle - self.spread / 2.0;
 		let max_angle = self.angle + self.spread / 2.0;
@@ -87,8 +96,8 @@ where
 		let velocity_y = speed * angle.sin();
 		for _ in 0..count {
 			self.particles.push(Particle {
-				x: 100.0,
-				y: 100.0,
+				x: self.x,
+				y: self.y,
 				velocity_x,
 				velocity_y,
 				time: 0.0,

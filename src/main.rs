@@ -19,6 +19,7 @@ impl MainState {
 		)
 		.unwrap();
 		let mut particle_system = ParticleSystem::new(mesh);
+		particle_system.set_position(400.0, 300.0);
 		particle_system.emit(10);
 		Self { particle_system }
 	}

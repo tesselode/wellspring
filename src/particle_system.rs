@@ -38,6 +38,7 @@ pub struct ParticleSystem<D>
 where
 	D: graphics::Drawable,
 {
+	// configuration
 	drawable: D,
 	particle_lifetime: f32,
 	emission_rate: f32,
@@ -46,8 +47,10 @@ where
 	max_speed: f32,
 	angle: f32,
 	spread: f32,
-	running: bool,
+	// internal state
 	particles: Vec<Particle>,
+	running: bool,
+	emit_timer: f32,
 }
 
 impl<D> ParticleSystem<D>
@@ -64,8 +67,9 @@ where
 			max_speed: 20.0,
 			angle: 0.0,
 			spread: std::f32::consts::PI * 2.0,
-			running: true,
 			particles: vec![],
+			running: true,
+			emit_timer: 1.0,
 		}
 	}
 
@@ -74,14 +78,22 @@ where
 			self.particles.push(Particle {
 				x: 0.0,
 				y: 0.0,
-				velocity_x: 10.0,
-				velocity_y: 10.0,
+				velocity_x: 100.0,
+				velocity_y: 100.0,
 				life: 0.0,
 			});
 		}
 	}
 
 	pub fn update(&mut self, ctx: &Context) {
+		let delta_time = ggez::timer::delta(ctx).as_secs_f32();
+		if self.running {
+			self.emit_timer -= self.emission_rate * delta_time;
+			while self.emit_timer <= 0.0 {
+				self.emit_timer += 1.0;
+				self.emit(1);
+			}
+		}
 		for particle in &mut self.particles {
 			particle.update(ctx)
 		}

@@ -73,12 +73,7 @@ impl Particle {
 	}
 }
 
-pub struct ParticleSystem<D>
-where
-	D: graphics::Drawable,
-{
-	// configuration
-	drawable: D,
+pub struct ParticleSystemSettings {
 	pub x: f32,
 	pub y: f32,
 	pub particle_lifetime: f32,
@@ -89,7 +84,31 @@ where
 	pub spread: f32,
 	pub sizes: Vec<f32>,
 	pub colors: Vec<Color>,
-	// internal state
+}
+
+impl Default for ParticleSystemSettings {
+	fn default() -> Self {
+		Self {
+			x: 0.0,
+			y: 0.0,
+			particle_lifetime: 1.0,
+			emission_rate: 10.0,
+			min_speed: 10.0,
+			max_speed: 100.0,
+			angle: 0.0,
+			spread: std::f32::consts::PI * 2.0,
+			sizes: vec![1.0],
+			colors: vec![graphics::WHITE],
+		}
+	}
+}
+
+pub struct ParticleSystem<D>
+where
+	D: graphics::Drawable,
+{
+	drawable: D,
+	pub settings: ParticleSystemSettings,
 	rng: ThreadRng,
 	particles: Vec<Particle>,
 	running: bool,
@@ -100,19 +119,10 @@ impl<D> ParticleSystem<D>
 where
 	D: graphics::Drawable,
 {
-	pub fn new(drawable: D) -> Self {
+	pub fn new(drawable: D, settings: ParticleSystemSettings) -> Self {
 		Self {
 			drawable,
-			x: 0.0,
-			y: 0.0,
-			particle_lifetime: 1.0,
-			emission_rate: 10.0,
-			min_speed: 10.0,
-			max_speed: 20.0,
-			angle: 0.0,
-			spread: std::f32::consts::PI * 2.0,
-			sizes: vec![1.0],
-			colors: vec![graphics::WHITE],
+			settings,
 			rng: thread_rng(),
 			particles: vec![],
 			running: true,
@@ -121,20 +131,21 @@ where
 	}
 
 	pub fn emit(&mut self, count: usize) {
-		let min_angle = self.angle - self.spread / 2.0;
-		let max_angle = self.angle + self.spread / 2.0;
+		let min_angle = self.settings.angle - self.settings.spread / 2.0;
+		let max_angle = self.settings.angle + self.settings.spread / 2.0;
 		let angle = min_angle + (max_angle - min_angle) * self.rng.gen::<f32>();
-		let speed = self.min_speed + (self.max_speed - self.min_speed) * self.rng.gen::<f32>();
+		let speed = self.settings.min_speed
+			+ (self.settings.max_speed - self.settings.min_speed) * self.rng.gen::<f32>();
 		let velocity_x = speed * angle.cos();
 		let velocity_y = speed * angle.sin();
 		for _ in 0..count {
 			self.particles.push(Particle {
-				sizes: self.sizes.clone(),
-				colors: self.colors.clone(),
-				lifetime: self.particle_lifetime,
+				sizes: self.settings.sizes.clone(),
+				colors: self.settings.colors.clone(),
+				lifetime: self.settings.particle_lifetime,
 				time: 0.0,
-				x: self.x,
-				y: self.y,
+				x: self.settings.x,
+				y: self.settings.y,
 				velocity_x,
 				velocity_y,
 			});
@@ -145,7 +156,7 @@ where
 		let delta_time = ggez::timer::delta(ctx).as_secs_f32();
 		// emit new particles
 		if self.running {
-			self.emit_timer -= self.emission_rate * delta_time;
+			self.emit_timer -= self.settings.emission_rate * delta_time;
 			while self.emit_timer <= 0.0 {
 				self.emit_timer += 1.0;
 				self.emit(1);

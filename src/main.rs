@@ -32,7 +32,7 @@ impl ggez::event::EventHandler for MainState {
 
 	fn draw(&mut self, ctx: &mut Context) -> GameResult {
 		graphics::clear(ctx, graphics::BLACK);
-		self.particle_system.draw(ctx)?;
+		graphics::draw(ctx, &self.particle_system, graphics::DrawParam::new())?;
 		graphics::present(ctx)
 	}
 }

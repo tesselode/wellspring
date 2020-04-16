@@ -116,11 +116,30 @@ where
 			}
 		}
 	}
+}
 
-	pub fn draw(&self, ctx: &mut Context) -> GameResult {
+impl<D> graphics::Drawable for ParticleSystem<D>
+where
+	D: graphics::Drawable,
+{
+	fn draw(&self, ctx: &mut Context, param: graphics::DrawParam) -> GameResult {
+		graphics::push_transform(ctx, Some(param.to_matrix()));
+		graphics::apply_transformations(ctx)?;
 		for particle in &self.particles {
 			particle.draw(ctx, &self.drawable)?;
 		}
+		graphics::pop_transform(ctx);
+		graphics::apply_transformations(ctx)?;
 		Ok(())
+	}
+
+	fn dimensions(&self, _ctx: &mut Context) -> Option<graphics::Rect> {
+		None
+	}
+
+	fn set_blend_mode(&mut self, _mode: Option<graphics::BlendMode>) {}
+
+	fn blend_mode(&self) -> Option<graphics::BlendMode> {
+		None
 	}
 }

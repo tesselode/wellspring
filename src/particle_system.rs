@@ -1,4 +1,5 @@
 use ggez::{graphics, nalgebra::Point2, Context, GameResult};
+use rand::prelude::*;
 
 struct Particle {
 	x: f32,
@@ -50,6 +51,7 @@ where
 	angle: f32,
 	spread: f32,
 	// internal state
+	rng: ThreadRng,
 	particles: Vec<Particle>,
 	running: bool,
 	emit_timer: f32,
@@ -69,6 +71,7 @@ where
 			max_speed: 20.0,
 			angle: 0.0,
 			spread: std::f32::consts::PI * 2.0,
+			rng: thread_rng(),
 			particles: vec![],
 			running: true,
 			emit_timer: 1.0,
@@ -76,12 +79,18 @@ where
 	}
 
 	pub fn emit(&mut self, count: usize) {
+		let min_angle = self.angle - self.spread / 2.0;
+		let max_angle = self.angle + self.spread / 2.0;
+		let angle = min_angle + (max_angle - min_angle) * self.rng.gen::<f32>();
+		let speed = self.min_speed + (self.max_speed - self.min_speed) * self.rng.gen::<f32>();
+		let velocity_x = speed * angle.cos();
+		let velocity_y = speed * angle.sin();
 		for _ in 0..count {
 			self.particles.push(Particle {
-				x: 0.0,
-				y: 0.0,
-				velocity_x: 100.0,
-				velocity_y: 100.0,
+				x: 100.0,
+				y: 100.0,
+				velocity_x,
+				velocity_y,
 				time: 0.0,
 				lifetime: self.particle_lifetime,
 			});

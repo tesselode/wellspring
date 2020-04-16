@@ -5,12 +5,14 @@ struct Particle {
 	y: f32,
 	velocity_x: f32,
 	velocity_y: f32,
-	life: f32,
+	time: f32,
+	lifetime: f32,
 }
 
 impl Particle {
 	fn update(&mut self, ctx: &Context) {
 		let delta_time = ggez::timer::delta(ctx).as_secs_f32();
+		self.time += 1.0 / self.lifetime * delta_time;
 		self.x += self.velocity_x * delta_time;
 		self.y += self.velocity_y * delta_time;
 	}
@@ -80,13 +82,15 @@ where
 				y: 0.0,
 				velocity_x: 100.0,
 				velocity_y: 100.0,
-				life: 0.0,
+				time: 0.0,
+				lifetime: self.particle_lifetime,
 			});
 		}
 	}
 
 	pub fn update(&mut self, ctx: &Context) {
 		let delta_time = ggez::timer::delta(ctx).as_secs_f32();
+		// emit new particles
 		if self.running {
 			self.emit_timer -= self.emission_rate * delta_time;
 			while self.emit_timer <= 0.0 {
@@ -94,8 +98,13 @@ where
 				self.emit(1);
 			}
 		}
-		for particle in &mut self.particles {
-			particle.update(ctx)
+		// update existing particles
+		for i in (0..self.particles.len()).rev() {
+			let particle = &mut self.particles[i];
+			particle.update(ctx);
+			if particle.time >= 1.0 {
+				self.particles.remove(i);
+			}
 		}
 	}
 

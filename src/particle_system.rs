@@ -1,13 +1,18 @@
-use ggez::{graphics, nalgebra::Point2, Context, GameResult};
+use ggez::{
+	graphics,
+	nalgebra::{Point2, Vector2},
+	Context, GameResult,
+};
 use rand::prelude::*;
 
 struct Particle {
+	lifetime: f32,
+	sizes: Vec<f32>,
+	time: f32,
 	x: f32,
 	y: f32,
 	velocity_x: f32,
 	velocity_y: f32,
-	time: f32,
-	lifetime: f32,
 }
 
 impl Particle {
@@ -18,23 +23,33 @@ impl Particle {
 		self.y += self.velocity_y * delta_time;
 	}
 
+	fn get_size(&self) -> f32 {
+		if self.sizes.len() == 1 {
+			return self.sizes[1];
+		}
+		let size_index = self.time * (self.sizes.len() - 1) as f32;
+		let size_index_a = size_index.floor() as usize;
+		let size_index_b = size_index.ceil() as usize;
+		let size_a = self.sizes[size_index_a];
+		let size_b = self.sizes[size_index_b];
+		let fraction = size_index % 1.0;
+		return size_a + (size_b - size_a) * fraction;
+	}
+
 	fn draw<D>(&self, ctx: &mut Context, drawable: &D) -> GameResult
 	where
 		D: graphics::Drawable,
 	{
+		let size = self.get_size();
 		graphics::draw(
 			ctx,
 			drawable,
 			graphics::DrawParam::new()
 				.dest(Point2::new(self.x, self.y))
+				.scale(Vector2::new(size, size))
 				.offset(Point2::new(0.5, 0.5)),
 		)
 	}
-}
-
-pub enum ParticleSystemLifetime {
-	Infinite,
-	Finite(f32),
 }
 
 pub struct ParticleSystem<D>
@@ -43,15 +58,15 @@ where
 {
 	// configuration
 	drawable: D,
-	x: f32,
-	y: f32,
-	particle_lifetime: f32,
-	emission_rate: f32,
-	lifetime: ParticleSystemLifetime,
-	min_speed: f32,
-	max_speed: f32,
-	angle: f32,
-	spread: f32,
+	pub x: f32,
+	pub y: f32,
+	pub particle_lifetime: f32,
+	pub emission_rate: f32,
+	pub min_speed: f32,
+	pub max_speed: f32,
+	pub angle: f32,
+	pub spread: f32,
+	pub sizes: Vec<f32>,
 	// internal state
 	rng: ThreadRng,
 	particles: Vec<Particle>,
@@ -70,21 +85,16 @@ where
 			y: 0.0,
 			particle_lifetime: 1.0,
 			emission_rate: 10.0,
-			lifetime: ParticleSystemLifetime::Infinite,
 			min_speed: 10.0,
 			max_speed: 20.0,
 			angle: 0.0,
 			spread: std::f32::consts::PI * 2.0,
+			sizes: vec![1.0],
 			rng: thread_rng(),
 			particles: vec![],
 			running: true,
 			emit_timer: 1.0,
 		}
-	}
-
-	pub fn set_position(&mut self, x: f32, y: f32) {
-		self.x = x;
-		self.y = y;
 	}
 
 	pub fn emit(&mut self, count: usize) {
@@ -96,12 +106,13 @@ where
 		let velocity_y = speed * angle.sin();
 		for _ in 0..count {
 			self.particles.push(Particle {
+				sizes: self.sizes.clone(),
+				lifetime: self.particle_lifetime,
+				time: 0.0,
 				x: self.x,
 				y: self.y,
 				velocity_x,
 				velocity_y,
-				time: 0.0,
-				lifetime: self.particle_lifetime,
 			});
 		}
 	}

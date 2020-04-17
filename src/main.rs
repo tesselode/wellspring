@@ -25,6 +25,8 @@ impl MainState {
 			ParticleSystemSettings {
 				x: 400.0,
 				y: 300.0,
+				min_particle_lifetime: 0.25,
+				max_particle_lifetime: 1.0,
 				emission_rate: 100.0,
 				colors: vec![
 					graphics::Color::new(1.0, 1.0, 1.0, 1.0),

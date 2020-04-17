@@ -76,7 +76,8 @@ impl Particle {
 pub struct ParticleSystemSettings {
 	pub x: f32,
 	pub y: f32,
-	pub particle_lifetime: f32,
+	pub min_particle_lifetime: f32,
+	pub max_particle_lifetime: f32,
 	pub emission_rate: f32,
 	pub min_speed: f32,
 	pub max_speed: f32,
@@ -91,7 +92,8 @@ impl Default for ParticleSystemSettings {
 		Self {
 			x: 0.0,
 			y: 0.0,
-			particle_lifetime: 1.0,
+			min_particle_lifetime: 1.0,
+			max_particle_lifetime: 1.0,
 			emission_rate: 10.0,
 			min_speed: 10.0,
 			max_speed: 100.0,
@@ -151,6 +153,9 @@ where
 	}
 
 	pub fn emit(&mut self, count: usize) {
+		let lifetime = self.settings.min_particle_lifetime
+			+ (self.settings.max_particle_lifetime - self.settings.min_particle_lifetime)
+				* self.rng.gen::<f32>();
 		let min_angle = self.settings.angle - self.settings.spread / 2.0;
 		let max_angle = self.settings.angle + self.settings.spread / 2.0;
 		let angle = min_angle + (max_angle - min_angle) * self.rng.gen::<f32>();
@@ -162,7 +167,7 @@ where
 			self.particles.push(Particle {
 				sizes: self.settings.sizes.clone(),
 				colors: self.settings.colors.clone(),
-				lifetime: self.settings.particle_lifetime,
+				lifetime,
 				time: 0.0,
 				x: self.settings.x,
 				y: self.settings.y,

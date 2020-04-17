@@ -5,7 +5,7 @@ use ggez::{
 	Context, GameResult,
 };
 use rand::prelude::*;
-use std::ops::{Add, Mul, Sub};
+use std::ops::{Add, Mul, Range, Sub};
 
 fn lerp<T>(a: T, b: T, amount: f32) -> T
 where
@@ -14,22 +14,11 @@ where
 	a + (b - a) * amount
 }
 
-pub struct Range<T>(pub T, pub T);
-
-impl<T> Range<T> {
-	pub fn single(value: T) -> Self
-	where
-		T: Copy,
-	{
-		Range(value, value)
-	}
-
-	fn get_rand(&self, rng: &mut ThreadRng) -> T
-	where
-		T: Add<T, Output = T> + Sub<T, Output = T> + Mul<f32, Output = T> + Copy,
-	{
-		lerp(self.0, self.1, rng.gen::<f32>())
-	}
+fn get_rand_in_range<T>(range: &Range<T>, rng: &mut ThreadRng) -> T
+where
+	T: Add<T, Output = T> + Sub<T, Output = T> + Mul<f32, Output = T> + Copy,
+{
+	lerp(range.start, range.end, rng.gen::<f32>())
 }
 
 struct Particle {
@@ -140,18 +129,18 @@ impl Default for ParticleSystemSettings {
 	fn default() -> Self {
 		Self {
 			position: Point2::new(0.0, 0.0),
-			particle_lifetime: Range::single(1.0),
+			particle_lifetime: 1.0..1.0,
 			emission_rate: 10.0,
-			speed: Range(10.0, 100.0),
+			speed: 10.0..100.0,
 			angle: 0.0,
 			spread: std::f32::consts::PI * 2.0,
 			sizes: vec![1.0],
 			colors: vec![graphics::WHITE],
-			spin: Range::single(0.0),
+			spin: 0.0..0.0,
 			use_relative_angle: false,
-			acceleration: Range::single(Vector2::new(0.0, 0.0)),
-			radial_acceleration: Range::single(0.0),
-			tangential_acceleration: Range::single(0.0),
+			acceleration: Vector2::new(0.0, 0.0)..Vector2::new(0.0, 0.0),
+			radial_acceleration: 0.0..0.0,
+			tangential_acceleration: 0.0..0.0,
 		}
 	}
 }
@@ -209,24 +198,27 @@ where
 			self.settings.angle + self.settings.spread / 2.0,
 			self.rng.gen::<f32>(),
 		);
-		let speed = self.settings.speed.get_rand(&mut self.rng);
+		let speed = get_rand_in_range(&self.settings.speed, &mut self.rng);
 		let velocity = Vector2::new(speed * angle.cos(), speed * angle.sin());
 		for _ in 0..count {
 			self.particles.push(Particle {
 				sizes: self.settings.sizes.clone(),
 				colors: self.settings.colors.clone(),
-				lifetime: self.settings.particle_lifetime.get_rand(&mut self.rng),
+				lifetime: get_rand_in_range(&self.settings.particle_lifetime, &mut self.rng),
 				time: 0.0,
 				position: self.settings.position,
 				velocity,
-				acceleration: self.settings.acceleration.get_rand(&mut self.rng),
-				radial_acceleration: self.settings.radial_acceleration.get_rand(&mut self.rng),
-				tangential_acceleration: self
-					.settings
-					.tangential_acceleration
-					.get_rand(&mut self.rng),
+				acceleration: get_rand_in_range(&self.settings.acceleration, &mut self.rng),
+				radial_acceleration: get_rand_in_range(
+					&self.settings.radial_acceleration,
+					&mut self.rng,
+				),
+				tangential_acceleration: get_rand_in_range(
+					&self.settings.tangential_acceleration,
+					&mut self.rng,
+				),
 				angle: 0.0,
-				spin: self.settings.spin.get_rand(&mut self.rng),
+				spin: get_rand_in_range(&self.settings.spin, &mut self.rng),
 				use_relative_angle: self.settings.use_relative_angle,
 			});
 		}

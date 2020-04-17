@@ -1,6 +1,8 @@
 mod particle_system;
 
-use ggez::{graphics, nalgebra::Point2, Context, GameResult};
+use ggez::{
+	event::KeyCode, graphics, input::keyboard::KeyMods, nalgebra::Point2, Context, GameResult,
+};
 use particle_system::*;
 
 struct MainState {
@@ -23,6 +25,7 @@ impl MainState {
 			ParticleSystemSettings {
 				x: 400.0,
 				y: 300.0,
+				emission_rate: 100.0,
 				colors: vec![
 					graphics::Color::new(1.0, 1.0, 1.0, 1.0),
 					graphics::Color::new(1.0, 0.0, 0.0, 2.0 / 3.0),
@@ -39,7 +42,29 @@ impl MainState {
 }
 
 impl ggez::event::EventHandler for MainState {
+	fn key_down_event(
+		&mut self,
+		_ctx: &mut Context,
+		keycode: KeyCode,
+		_keymods: KeyMods,
+		_repeat: bool,
+	) {
+		match keycode {
+			KeyCode::Space => {
+				if self.particle_system.running() {
+					self.particle_system.stop();
+				} else {
+					self.particle_system.start();
+				}
+			}
+			_ => {}
+		}
+	}
+
 	fn update(&mut self, ctx: &mut Context) -> GameResult {
+		let mouse_position = ggez::input::mouse::position(ctx);
+		self.particle_system.settings.x = mouse_position.x;
+		self.particle_system.settings.y = mouse_position.y;
 		self.particle_system.update(ctx);
 		Ok(())
 	}
@@ -47,6 +72,8 @@ impl ggez::event::EventHandler for MainState {
 	fn draw(&mut self, ctx: &mut Context) -> GameResult {
 		graphics::clear(ctx, graphics::BLACK);
 		graphics::draw(ctx, &self.particle_system, graphics::DrawParam::new())?;
+		let text = graphics::Text::new(format!("{}", self.particle_system.count()));
+		graphics::draw(ctx, &text, graphics::DrawParam::new())?;
 		graphics::present(ctx)
 	}
 }

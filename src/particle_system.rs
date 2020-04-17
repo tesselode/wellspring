@@ -130,6 +130,26 @@ where
 		}
 	}
 
+	pub fn running(&self) -> bool {
+		self.running
+	}
+
+	pub fn count(&self) -> usize {
+		self.particles.len()
+	}
+
+	pub fn start(&mut self) {
+		if self.running {
+			return;
+		}
+		self.running = true;
+		self.emit_timer = 1.0;
+	}
+
+	pub fn stop(&mut self) {
+		self.running = false;
+	}
+
 	pub fn emit(&mut self, count: usize) {
 		let min_angle = self.settings.angle - self.settings.spread / 2.0;
 		let max_angle = self.settings.angle + self.settings.spread / 2.0;

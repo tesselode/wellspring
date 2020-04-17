@@ -38,7 +38,7 @@ struct Particle {
 
 impl Particle {
 	fn update(&mut self, ctx: &Context, emitter_position: Point2<f32>) {
-		let mut radial_vector: Vector2<f32> = (self.position - emitter_position).into();
+		let mut radial_vector = self.position - emitter_position;
 		if radial_vector.norm() != 0.0 {
 			radial_vector = radial_vector.normalize();
 		}
@@ -109,10 +109,16 @@ impl Particle {
 	}
 }
 
+pub enum EmissionArea {
+	Point,
+	Rectangle(Vector2<f32>),
+}
+
 pub struct ParticleSystemSettings {
 	pub position: Point2<f32>,
 	pub particle_lifetime: Range<f32>,
 	pub emission_rate: f32,
+	pub emission_area: EmissionArea,
 	pub speed: Range<f32>,
 	pub angle: f32,
 	pub spread: f32,
@@ -131,6 +137,7 @@ impl Default for ParticleSystemSettings {
 			position: Point2::new(0.0, 0.0),
 			particle_lifetime: 1.0..1.0,
 			emission_rate: 10.0,
+			emission_area: EmissionArea::Point,
 			speed: 10.0..100.0,
 			angle: 0.0,
 			spread: std::f32::consts::PI * 2.0,
@@ -201,12 +208,27 @@ where
 		let speed = get_rand_in_range(&self.settings.speed, &mut self.rng);
 		let velocity = Vector2::new(speed * angle.cos(), speed * angle.sin());
 		for _ in 0..count {
+			let position = match self.settings.emission_area {
+				EmissionArea::Point => self.settings.position,
+				EmissionArea::Rectangle(size) => Point2::new(
+					lerp(
+						self.settings.position.x - size.x / 2.0,
+						self.settings.position.x + size.x / 2.0,
+						self.rng.gen::<f32>(),
+					),
+					lerp(
+						self.settings.position.y - size.y / 2.0,
+						self.settings.position.y + size.y / 2.0,
+						self.rng.gen::<f32>(),
+					),
+				),
+			};
 			self.particles.push(Particle {
 				sizes: self.settings.sizes.clone(),
 				colors: self.settings.colors.clone(),
 				lifetime: get_rand_in_range(&self.settings.particle_lifetime, &mut self.rng),
 				time: 0.0,
-				position: self.settings.position,
+				position,
 				velocity,
 				acceleration: get_rand_in_range(&self.settings.acceleration, &mut self.rng),
 				radial_acceleration: get_rand_in_range(

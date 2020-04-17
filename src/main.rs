@@ -33,11 +33,8 @@ impl MainState {
 					graphics::Color::new(1.0, 0.0, 0.0, 2.0 / 3.0),
 					graphics::Color::new(0.0, 0.0, 1.0, 0.0),
 				],
-				speed: 10.0..100.0,
-				use_relative_angle: true,
-				acceleration: Vector2::new(0.0, 500.0)..Vector2::new(0.0, 500.0),
-				radial_acceleration: 300.0..500.0,
-				tangential_acceleration: -300.0..300.0,
+				speed: 0.0..0.0,
+				emission_area: EmissionArea::Rectangle(Vector2::new(50.0, 100.0)),
 				..Default::default()
 			},
 		);
@@ -67,7 +64,6 @@ impl ggez::event::EventHandler for MainState {
 	}
 
 	fn update(&mut self, ctx: &mut Context) -> GameResult {
-		self.particle_system.settings.position = ggez::input::mouse::position(ctx).into();
 		self.particle_system.update(ctx);
 		Ok(())
 	}

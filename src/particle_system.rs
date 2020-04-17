@@ -113,6 +113,8 @@ pub enum EmissionArea {
 	Point,
 	Rectangle(Vector2<f32>),
 	Ellipse(Vector2<f32>),
+	RectangleBorder(Vector2<f32>),
+	EllipseBorder(Vector2<f32>),
 }
 
 pub struct ParticleSystemSettings {
@@ -200,6 +202,65 @@ where
 		self.running = false;
 	}
 
+	fn get_particle_position_offset(
+		emission_area: &EmissionArea,
+		rng: &mut ThreadRng,
+	) -> Vector2<f32> {
+		match emission_area {
+			EmissionArea::Point => Vector2::new(0.0, 0.0),
+			EmissionArea::Rectangle(size) => Vector2::new(
+				lerp(-size.x / 2.0, size.x / 2.0, rng.gen::<f32>()),
+				lerp(-size.y / 2.0, size.y / 2.0, rng.gen::<f32>()),
+			),
+			EmissionArea::Ellipse(size) => {
+				let angle = 2.0 * std::f32::consts::PI * rng.gen::<f32>();
+				let distance = rng.gen::<f32>();
+				Vector2::new(
+					distance * angle.cos() * size.x,
+					distance * angle.sin() * size.y,
+				)
+			}
+			EmissionArea::RectangleBorder(size) => {
+				let top_left = Vector2::new(-size.x / 2.0, -size.y / 2.0);
+				let top_right = Vector2::new(size.x / 2.0, -size.y / 2.0);
+				let bottom_right = Vector2::new(size.x / 2.0, size.y / 2.0);
+				let bottom_left = Vector2::new(-size.x / 2.0, size.y / 2.0);
+				let side_boundaries = [
+					size.x,
+					size.x + size.y,
+					size.x * 2.0 + size.y,
+					size.x * 2.0 + size.y * 2.0,
+				];
+				let amount = side_boundaries[3] * rng.gen::<f32>();
+				if amount > side_boundaries[2] {
+					lerp(
+						bottom_left,
+						top_left,
+						(amount - side_boundaries[2]) / (side_boundaries[3] - side_boundaries[2]),
+					)
+				} else if amount > side_boundaries[1] {
+					lerp(
+						bottom_right,
+						bottom_left,
+						(amount - side_boundaries[1]) / (side_boundaries[2] - side_boundaries[1]),
+					)
+				} else if amount > side_boundaries[0] {
+					lerp(
+						top_right,
+						bottom_right,
+						(amount - side_boundaries[0]) / (side_boundaries[1] - side_boundaries[0]),
+					)
+				} else {
+					lerp(top_left, top_right, amount / side_boundaries[0])
+				}
+			}
+			EmissionArea::EllipseBorder(size) => {
+				let angle = 2.0 * std::f32::consts::PI * rng.gen::<f32>();
+				Vector2::new(angle.cos() * size.x, angle.sin() * size.y)
+			}
+		}
+	}
+
 	pub fn emit(&mut self, count: usize) {
 		let angle = lerp(
 			self.settings.angle - self.settings.spread / 2.0,
@@ -209,30 +270,8 @@ where
 		let speed = get_rand_in_range(&self.settings.speed, &mut self.rng);
 		let velocity = Vector2::new(speed * angle.cos(), speed * angle.sin());
 		for _ in 0..count {
-			let position = match self.settings.emission_area {
-				EmissionArea::Point => self.settings.position,
-				EmissionArea::Rectangle(size) => Point2::new(
-					lerp(
-						self.settings.position.x - size.x / 2.0,
-						self.settings.position.x + size.x / 2.0,
-						self.rng.gen::<f32>(),
-					),
-					lerp(
-						self.settings.position.y - size.y / 2.0,
-						self.settings.position.y + size.y / 2.0,
-						self.rng.gen::<f32>(),
-					),
-				),
-				EmissionArea::Ellipse(size) => {
-					let angle = 2.0 * std::f32::consts::PI * self.rng.gen::<f32>();
-					let distance = self.rng.gen::<f32>();
-					self.settings.position
-						+ Vector2::new(
-							distance * angle.cos() * size.x,
-							distance * angle.sin() * size.y,
-						)
-				}
-			};
+			let position = self.settings.position
+				+ Self::get_particle_position_offset(&self.settings.emission_area, &mut self.rng);
 			self.particles.push(Particle {
 				sizes: self.settings.sizes.clone(),
 				colors: self.settings.colors.clone(),

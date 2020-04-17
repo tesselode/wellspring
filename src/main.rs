@@ -34,7 +34,7 @@ impl MainState {
 					graphics::Color::new(0.0, 0.0, 1.0, 0.0),
 				],
 				speed: 0.0..0.0,
-				emission_area: EmissionArea::Ellipse(Vector2::new(50.0, 100.0)),
+				emission_area: EmissionArea::RectangleBorder(Vector2::new(50.0, 400.0)),
 				..Default::default()
 			},
 		);

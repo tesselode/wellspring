@@ -11,12 +11,10 @@ struct MainState {
 
 impl MainState {
 	pub fn new(ctx: &mut Context) -> Self {
-		let mesh = graphics::Mesh::new_circle(
+		let mesh = graphics::Mesh::new_rectangle(
 			ctx,
 			graphics::DrawMode::fill(),
-			Point2::new(0.0, 0.0),
-			5.0,
-			0.1,
+			graphics::Rect::new(-5.0, -1.0, 10.0, 2.0),
 			graphics::WHITE,
 		)
 		.unwrap();
@@ -35,6 +33,8 @@ impl MainState {
 				],
 				min_speed: 10.0,
 				max_speed: 100.0,
+				min_spin: -5.0,
+				max_spin: 5.0,
 				..Default::default()
 			},
 		);

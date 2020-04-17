@@ -19,6 +19,8 @@ struct Particle {
 	y: f32,
 	velocity_x: f32,
 	velocity_y: f32,
+	angle: f32,
+	spin: f32,
 }
 
 impl Particle {
@@ -27,6 +29,7 @@ impl Particle {
 		self.time += 1.0 / self.lifetime * delta_time;
 		self.x += self.velocity_x * delta_time;
 		self.y += self.velocity_y * delta_time;
+		self.angle += self.spin * delta_time;
 	}
 
 	fn get_size(&self) -> f32 {
@@ -71,6 +74,7 @@ impl Particle {
 			graphics::DrawParam::new()
 				.dest(Point2::new(self.x, self.y))
 				.scale(Vector2::new(size, size))
+				.rotation(self.angle)
 				.offset(Point2::new(0.5, 0.5))
 				.color(self.get_color()),
 		)
@@ -89,6 +93,8 @@ pub struct ParticleSystemSettings {
 	pub spread: f32,
 	pub sizes: Vec<f32>,
 	pub colors: Vec<Color>,
+	pub min_spin: f32,
+	pub max_spin: f32,
 }
 
 impl Default for ParticleSystemSettings {
@@ -105,6 +111,8 @@ impl Default for ParticleSystemSettings {
 			spread: std::f32::consts::PI * 2.0,
 			sizes: vec![1.0],
 			colors: vec![graphics::WHITE],
+			min_spin: 0.0,
+			max_spin: 0.0,
 		}
 	}
 }
@@ -172,6 +180,11 @@ where
 			self.settings.max_speed,
 			self.rng.gen::<f32>(),
 		);
+		let spin = lerp(
+			self.settings.min_spin,
+			self.settings.max_spin,
+			self.rng.gen::<f32>(),
+		);
 		let velocity_x = speed * angle.cos();
 		let velocity_y = speed * angle.sin();
 		for _ in 0..count {
@@ -184,6 +197,8 @@ where
 				y: self.settings.y,
 				velocity_x,
 				velocity_y,
+				angle: 0.0,
+				spin,
 			});
 		}
 	}

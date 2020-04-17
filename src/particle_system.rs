@@ -5,8 +5,12 @@ use ggez::{
 	Context, GameResult,
 };
 use rand::prelude::*;
+use std::ops::{Add, Mul, Sub};
 
-fn lerp(a: f32, b: f32, amount: f32) -> f32 {
+fn lerp<T>(a: T, b: T, amount: f32) -> T
+where
+	T: Add<T, Output = T> + Sub<T, Output = T> + Mul<f32, Output = T> + Copy,
+{
 	a + (b - a) * amount
 }
 
@@ -16,12 +20,9 @@ struct Particle {
 	colors: Vec<Color>,
 	use_relative_angle: bool,
 	time: f32,
-	x: f32,
-	y: f32,
-	velocity_x: f32,
-	velocity_y: f32,
-	acceleration_x: f32,
-	acceleration_y: f32,
+	position: Point2<f32>,
+	velocity: Vector2<f32>,
+	acceleration: Vector2<f32>,
 	radial_acceleration: f32,
 	tangential_acceleration: f32,
 	angle: f32,
@@ -29,22 +30,18 @@ struct Particle {
 }
 
 impl Particle {
-	fn update(&mut self, ctx: &Context, emitter_x: f32, emitter_y: f32) {
-		let mut radial_vector = Vector2::new(self.x - emitter_x, self.y - emitter_y);
+	fn update(&mut self, ctx: &Context, emitter_position: Point2<f32>) {
+		let mut radial_vector: Vector2<f32> = (self.position - emitter_position).into();
 		if radial_vector.norm() != 0.0 {
 			radial_vector = radial_vector.normalize();
 		}
 		let tangential_vector = Vector2::new(-radial_vector.y, radial_vector.x);
 		let delta_time = ggez::timer::delta(ctx).as_secs_f32();
 		self.time += 1.0 / self.lifetime * delta_time;
-		self.velocity_x += self.acceleration_x * delta_time;
-		self.velocity_y += self.acceleration_y * delta_time;
-		self.velocity_x += self.radial_acceleration * radial_vector.x * delta_time;
-		self.velocity_y += self.radial_acceleration * radial_vector.y * delta_time;
-		self.velocity_x += self.tangential_acceleration * tangential_vector.x * delta_time;
-		self.velocity_y += self.tangential_acceleration * tangential_vector.y * delta_time;
-		self.x += self.velocity_x * delta_time;
-		self.y += self.velocity_y * delta_time;
+		self.velocity += self.acceleration * delta_time;
+		self.velocity += self.radial_acceleration * radial_vector * delta_time;
+		self.velocity += self.tangential_acceleration * tangential_vector * delta_time;
+		self.position += self.velocity * delta_time;
 		self.angle += self.spin * delta_time;
 	}
 
@@ -81,7 +78,7 @@ impl Particle {
 
 	fn get_angle(&self) -> f32 {
 		if self.use_relative_angle {
-			self.velocity_y.atan2(self.velocity_x)
+			self.velocity.y.atan2(self.velocity.x)
 		} else {
 			self.angle
 		}
@@ -96,7 +93,7 @@ impl Particle {
 			ctx,
 			drawable,
 			graphics::DrawParam::new()
-				.dest(Point2::new(self.x, self.y))
+				.dest(self.position)
 				.scale(Vector2::new(size, size))
 				.rotation(self.get_angle())
 				.offset(Point2::new(0.5, 0.5))
@@ -106,8 +103,7 @@ impl Particle {
 }
 
 pub struct ParticleSystemSettings {
-	pub x: f32,
-	pub y: f32,
+	pub position: Point2<f32>,
 	pub min_particle_lifetime: f32,
 	pub max_particle_lifetime: f32,
 	pub emission_rate: f32,
@@ -120,10 +116,8 @@ pub struct ParticleSystemSettings {
 	pub min_spin: f32,
 	pub max_spin: f32,
 	pub use_relative_angle: bool,
-	pub min_acceleration_x: f32,
-	pub min_acceleration_y: f32,
-	pub max_acceleration_x: f32,
-	pub max_acceleration_y: f32,
+	pub min_acceleration: Vector2<f32>,
+	pub max_acceleration: Vector2<f32>,
 	pub min_radial_acceleration: f32,
 	pub max_radial_acceleration: f32,
 	pub min_tangential_acceleration: f32,
@@ -133,8 +127,7 @@ pub struct ParticleSystemSettings {
 impl Default for ParticleSystemSettings {
 	fn default() -> Self {
 		Self {
-			x: 0.0,
-			y: 0.0,
+			position: Point2::new(0.0, 0.0),
 			min_particle_lifetime: 1.0,
 			max_particle_lifetime: 1.0,
 			emission_rate: 10.0,
@@ -147,10 +140,8 @@ impl Default for ParticleSystemSettings {
 			min_spin: 0.0,
 			max_spin: 0.0,
 			use_relative_angle: false,
-			min_acceleration_x: 0.0,
-			min_acceleration_y: 0.0,
-			max_acceleration_x: 0.0,
-			max_acceleration_y: 0.0,
+			min_acceleration: Vector2::new(0.0, 0.0),
+			max_acceleration: Vector2::new(0.0, 0.0),
 			min_radial_acceleration: 0.0,
 			max_radial_acceleration: 0.0,
 			min_tangential_acceleration: 0.0,
@@ -222,14 +213,9 @@ where
 			self.settings.max_speed,
 			self.rng.gen::<f32>(),
 		);
-		let acceleration_x = lerp(
-			self.settings.min_acceleration_x,
-			self.settings.max_acceleration_x,
-			self.rng.gen::<f32>(),
-		);
-		let acceleration_y = lerp(
-			self.settings.min_acceleration_y,
-			self.settings.max_acceleration_y,
+		let acceleration = lerp(
+			self.settings.min_acceleration,
+			self.settings.max_acceleration,
 			self.rng.gen::<f32>(),
 		);
 		let radial_acceleration = lerp(
@@ -247,20 +233,16 @@ where
 			self.settings.max_spin,
 			self.rng.gen::<f32>(),
 		);
-		let velocity_x = speed * angle.cos();
-		let velocity_y = speed * angle.sin();
+		let velocity = Vector2::new(speed * angle.cos(), speed * angle.sin());
 		for _ in 0..count {
 			self.particles.push(Particle {
 				sizes: self.settings.sizes.clone(),
 				colors: self.settings.colors.clone(),
 				lifetime,
 				time: 0.0,
-				x: self.settings.x,
-				y: self.settings.y,
-				velocity_x,
-				velocity_y,
-				acceleration_x,
-				acceleration_y,
+				position: self.settings.position,
+				velocity,
+				acceleration,
 				radial_acceleration,
 				tangential_acceleration,
 				angle: 0.0,
@@ -283,7 +265,7 @@ where
 		// update existing particles
 		for i in (0..self.particles.len()).rev() {
 			let particle = &mut self.particles[i];
-			particle.update(ctx, self.settings.x, self.settings.y);
+			particle.update(ctx, self.settings.position);
 			if particle.time >= 1.0 {
 				self.particles.remove(i);
 			}

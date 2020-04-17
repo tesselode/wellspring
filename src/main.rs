@@ -1,6 +1,12 @@
 mod particle_system;
 
-use ggez::{event::KeyCode, graphics, input::keyboard::KeyMods, Context, GameResult};
+use ggez::{
+	event::KeyCode,
+	graphics,
+	input::keyboard::KeyMods,
+	nalgebra::{Point2, Vector2},
+	Context, GameResult,
+};
 use particle_system::*;
 
 struct MainState {
@@ -19,8 +25,7 @@ impl MainState {
 		let mut particle_system = ParticleSystem::new(
 			mesh,
 			ParticleSystemSettings {
-				x: 400.0,
-				y: 300.0,
+				position: Point2::new(400.0, 300.0),
 				min_particle_lifetime: 0.25,
 				max_particle_lifetime: 1.0,
 				emission_rate: 100.0,
@@ -32,8 +37,8 @@ impl MainState {
 				min_speed: 10.0,
 				max_speed: 100.0,
 				use_relative_angle: true,
-				min_acceleration_y: 500.0,
-				max_acceleration_y: 500.0,
+				min_acceleration: Vector2::new(0.0, 500.0),
+				max_acceleration: Vector2::new(0.0, 500.0),
 				min_radial_acceleration: 300.0,
 				max_radial_acceleration: 500.0,
 				min_tangential_acceleration: -300.0,
@@ -67,9 +72,7 @@ impl ggez::event::EventHandler for MainState {
 	}
 
 	fn update(&mut self, ctx: &mut Context) -> GameResult {
-		let mouse_position = ggez::input::mouse::position(ctx);
-		self.particle_system.settings.x = mouse_position.x;
-		self.particle_system.settings.y = mouse_position.y;
+		self.particle_system.settings.position = ggez::input::mouse::position(ctx).into();
 		self.particle_system.update(ctx);
 		Ok(())
 	}

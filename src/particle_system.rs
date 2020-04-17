@@ -23,6 +23,7 @@ struct Particle {
 	acceleration_x: f32,
 	acceleration_y: f32,
 	radial_acceleration: f32,
+	tangential_acceleration: f32,
 	angle: f32,
 	spin: f32,
 }
@@ -35,6 +36,8 @@ impl Particle {
 		self.velocity_y += self.acceleration_y * delta_time;
 		self.velocity_x += self.radial_acceleration * (self.x - emitter_x) * delta_time;
 		self.velocity_y += self.radial_acceleration * (self.y - emitter_y) * delta_time;
+		self.velocity_x -= self.velocity_y * self.tangential_acceleration * delta_time;
+		self.velocity_y += self.velocity_x * self.tangential_acceleration * delta_time;
 		self.x += self.velocity_x * delta_time;
 		self.y += self.velocity_y * delta_time;
 		self.angle += self.spin * delta_time;
@@ -118,6 +121,8 @@ pub struct ParticleSystemSettings {
 	pub max_acceleration_y: f32,
 	pub min_radial_acceleration: f32,
 	pub max_radial_acceleration: f32,
+	pub min_tangential_acceleration: f32,
+	pub max_tangential_acceleration: f32,
 }
 
 impl Default for ParticleSystemSettings {
@@ -143,6 +148,8 @@ impl Default for ParticleSystemSettings {
 			max_acceleration_y: 0.0,
 			min_radial_acceleration: 0.0,
 			max_radial_acceleration: 0.0,
+			min_tangential_acceleration: 0.0,
+			max_tangential_acceleration: 0.0,
 		}
 	}
 }
@@ -225,6 +232,11 @@ where
 			self.settings.max_radial_acceleration,
 			self.rng.gen::<f32>(),
 		);
+		let tangential_acceleration = lerp(
+			self.settings.min_tangential_acceleration,
+			self.settings.max_tangential_acceleration,
+			self.rng.gen::<f32>(),
+		);
 		let spin = lerp(
 			self.settings.min_spin,
 			self.settings.max_spin,
@@ -245,6 +257,7 @@ where
 				acceleration_x,
 				acceleration_y,
 				radial_acceleration,
+				tangential_acceleration,
 				angle: 0.0,
 				spin,
 				use_relative_angle: self.settings.use_relative_angle,

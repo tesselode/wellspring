@@ -109,6 +109,11 @@ impl Particle {
 	}
 }
 
+pub enum EmitterLifetime {
+	Infinite,
+	Finite(f32),
+}
+
 pub enum EmissionArea {
 	Point,
 	Rectangle(Vector2<f32>),
@@ -119,6 +124,7 @@ pub enum EmissionArea {
 
 pub struct ParticleSystemSettings {
 	pub position: Point2<f32>,
+	pub emitter_lifetime: EmitterLifetime,
 	pub particle_lifetime: Range<f32>,
 	pub emission_rate: f32,
 	pub emission_area: EmissionArea,
@@ -138,6 +144,7 @@ impl Default for ParticleSystemSettings {
 	fn default() -> Self {
 		Self {
 			position: Point2::new(0.0, 0.0),
+			emitter_lifetime: EmitterLifetime::Infinite,
 			particle_lifetime: 1.0..1.0,
 			emission_rate: 10.0,
 			emission_area: EmissionArea::Point,
@@ -165,6 +172,7 @@ where
 	particles: Vec<Particle>,
 	running: bool,
 	emit_timer: f32,
+	time: f32,
 }
 
 impl<D> ParticleSystem<D>
@@ -179,6 +187,7 @@ where
 			particles: vec![],
 			running: true,
 			emit_timer: 1.0,
+			time: 0.0,
 		}
 	}
 
@@ -196,6 +205,7 @@ where
 		}
 		self.running = true;
 		self.emit_timer = 1.0;
+		self.time = 0.0;
 	}
 
 	pub fn stop(&mut self) {
@@ -303,6 +313,12 @@ where
 			while self.emit_timer <= 0.0 {
 				self.emit_timer += 1.0;
 				self.emit(1);
+			}
+			self.time += delta_time;
+			if let EmitterLifetime::Finite(time) = self.settings.emitter_lifetime {
+				if self.time >= time {
+					self.stop();
+				}
 			}
 		}
 		// update existing particles

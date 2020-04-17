@@ -26,6 +26,7 @@ impl MainState {
 			mesh,
 			ParticleSystemSettings {
 				position: Point2::new(400.0, 300.0),
+				emitter_lifetime: EmitterLifetime::Finite(1.0),
 				particle_lifetime: 0.25..1.0,
 				emission_rate: 500.0,
 				colors: vec![

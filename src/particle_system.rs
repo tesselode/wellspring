@@ -30,14 +30,19 @@ struct Particle {
 
 impl Particle {
 	fn update(&mut self, ctx: &Context, emitter_x: f32, emitter_y: f32) {
+		let mut radial_vector = Vector2::new(self.x - emitter_x, self.y - emitter_y);
+		if radial_vector.norm() != 0.0 {
+			radial_vector = radial_vector.normalize();
+		}
+		let tangential_vector = Vector2::new(-radial_vector.y, radial_vector.x);
 		let delta_time = ggez::timer::delta(ctx).as_secs_f32();
 		self.time += 1.0 / self.lifetime * delta_time;
 		self.velocity_x += self.acceleration_x * delta_time;
 		self.velocity_y += self.acceleration_y * delta_time;
-		self.velocity_x += self.radial_acceleration * (self.x - emitter_x) * delta_time;
-		self.velocity_y += self.radial_acceleration * (self.y - emitter_y) * delta_time;
-		self.velocity_x -= self.velocity_y * self.tangential_acceleration * delta_time;
-		self.velocity_y += self.velocity_x * self.tangential_acceleration * delta_time;
+		self.velocity_x += self.radial_acceleration * radial_vector.x * delta_time;
+		self.velocity_y += self.radial_acceleration * radial_vector.y * delta_time;
+		self.velocity_x += self.tangential_acceleration * tangential_vector.x * delta_time;
+		self.velocity_y += self.tangential_acceleration * tangential_vector.y * delta_time;
 		self.x += self.velocity_x * delta_time;
 		self.y += self.velocity_y * delta_time;
 		self.angle += self.spin * delta_time;

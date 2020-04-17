@@ -26,23 +26,18 @@ impl MainState {
 			mesh,
 			ParticleSystemSettings {
 				position: Point2::new(400.0, 300.0),
-				min_particle_lifetime: 0.25,
-				max_particle_lifetime: 1.0,
+				particle_lifetime: Range(0.25, 1.0),
 				emission_rate: 100.0,
 				colors: vec![
 					graphics::Color::new(1.0, 1.0, 1.0, 1.0),
 					graphics::Color::new(1.0, 0.0, 0.0, 2.0 / 3.0),
 					graphics::Color::new(0.0, 0.0, 1.0, 0.0),
 				],
-				min_speed: 10.0,
-				max_speed: 100.0,
+				speed: Range(10.0, 100.0),
 				use_relative_angle: true,
-				min_acceleration: Vector2::new(0.0, 500.0),
-				max_acceleration: Vector2::new(0.0, 500.0),
-				min_radial_acceleration: 300.0,
-				max_radial_acceleration: 500.0,
-				min_tangential_acceleration: -300.0,
-				max_tangential_acceleration: 300.0,
+				acceleration: Range::single(Vector2::new(0.0, 500.0)),
+				radial_acceleration: Range(300.0, 500.0),
+				tangential_acceleration: Range(-300.0, 300.0),
 				..Default::default()
 			},
 		);

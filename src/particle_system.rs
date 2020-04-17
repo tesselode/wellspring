@@ -14,6 +14,24 @@ where
 	a + (b - a) * amount
 }
 
+pub struct Range<T>(pub T, pub T);
+
+impl<T> Range<T> {
+	pub fn single(value: T) -> Self
+	where
+		T: Copy,
+	{
+		Range(value, value)
+	}
+
+	fn get_rand(&self, rng: &mut ThreadRng) -> T
+	where
+		T: Add<T, Output = T> + Sub<T, Output = T> + Mul<f32, Output = T> + Copy,
+	{
+		lerp(self.0, self.1, rng.gen::<f32>())
+	}
+}
+
 struct Particle {
 	lifetime: f32,
 	sizes: Vec<f32>,
@@ -104,48 +122,36 @@ impl Particle {
 
 pub struct ParticleSystemSettings {
 	pub position: Point2<f32>,
-	pub min_particle_lifetime: f32,
-	pub max_particle_lifetime: f32,
+	pub particle_lifetime: Range<f32>,
 	pub emission_rate: f32,
-	pub min_speed: f32,
-	pub max_speed: f32,
+	pub speed: Range<f32>,
 	pub angle: f32,
 	pub spread: f32,
 	pub sizes: Vec<f32>,
 	pub colors: Vec<Color>,
-	pub min_spin: f32,
-	pub max_spin: f32,
+	pub spin: Range<f32>,
 	pub use_relative_angle: bool,
-	pub min_acceleration: Vector2<f32>,
-	pub max_acceleration: Vector2<f32>,
-	pub min_radial_acceleration: f32,
-	pub max_radial_acceleration: f32,
-	pub min_tangential_acceleration: f32,
-	pub max_tangential_acceleration: f32,
+	pub acceleration: Range<Vector2<f32>>,
+	pub radial_acceleration: Range<f32>,
+	pub tangential_acceleration: Range<f32>,
 }
 
 impl Default for ParticleSystemSettings {
 	fn default() -> Self {
 		Self {
 			position: Point2::new(0.0, 0.0),
-			min_particle_lifetime: 1.0,
-			max_particle_lifetime: 1.0,
+			particle_lifetime: Range::single(1.0),
 			emission_rate: 10.0,
-			min_speed: 10.0,
-			max_speed: 100.0,
+			speed: Range(10.0, 100.0),
 			angle: 0.0,
 			spread: std::f32::consts::PI * 2.0,
 			sizes: vec![1.0],
 			colors: vec![graphics::WHITE],
-			min_spin: 0.0,
-			max_spin: 0.0,
+			spin: Range::single(0.0),
 			use_relative_angle: false,
-			min_acceleration: Vector2::new(0.0, 0.0),
-			max_acceleration: Vector2::new(0.0, 0.0),
-			min_radial_acceleration: 0.0,
-			max_radial_acceleration: 0.0,
-			min_tangential_acceleration: 0.0,
-			max_tangential_acceleration: 0.0,
+			acceleration: Range::single(Vector2::new(0.0, 0.0)),
+			radial_acceleration: Range::single(0.0),
+			tangential_acceleration: Range::single(0.0),
 		}
 	}
 }
@@ -198,55 +204,29 @@ where
 	}
 
 	pub fn emit(&mut self, count: usize) {
-		let lifetime = lerp(
-			self.settings.min_particle_lifetime,
-			self.settings.max_particle_lifetime,
-			self.rng.gen::<f32>(),
-		);
 		let angle = lerp(
 			self.settings.angle - self.settings.spread / 2.0,
 			self.settings.angle + self.settings.spread / 2.0,
 			self.rng.gen::<f32>(),
 		);
-		let speed = lerp(
-			self.settings.min_speed,
-			self.settings.max_speed,
-			self.rng.gen::<f32>(),
-		);
-		let acceleration = lerp(
-			self.settings.min_acceleration,
-			self.settings.max_acceleration,
-			self.rng.gen::<f32>(),
-		);
-		let radial_acceleration = lerp(
-			self.settings.min_radial_acceleration,
-			self.settings.max_radial_acceleration,
-			self.rng.gen::<f32>(),
-		);
-		let tangential_acceleration = lerp(
-			self.settings.min_tangential_acceleration,
-			self.settings.max_tangential_acceleration,
-			self.rng.gen::<f32>(),
-		);
-		let spin = lerp(
-			self.settings.min_spin,
-			self.settings.max_spin,
-			self.rng.gen::<f32>(),
-		);
+		let speed = self.settings.speed.get_rand(&mut self.rng);
 		let velocity = Vector2::new(speed * angle.cos(), speed * angle.sin());
 		for _ in 0..count {
 			self.particles.push(Particle {
 				sizes: self.settings.sizes.clone(),
 				colors: self.settings.colors.clone(),
-				lifetime,
+				lifetime: self.settings.particle_lifetime.get_rand(&mut self.rng),
 				time: 0.0,
 				position: self.settings.position,
 				velocity,
-				acceleration,
-				radial_acceleration,
-				tangential_acceleration,
+				acceleration: self.settings.acceleration.get_rand(&mut self.rng),
+				radial_acceleration: self.settings.radial_acceleration.get_rand(&mut self.rng),
+				tangential_acceleration: self
+					.settings
+					.tangential_acceleration
+					.get_rand(&mut self.rng),
 				angle: 0.0,
-				spin,
+				spin: self.settings.spin.get_rand(&mut self.rng),
 				use_relative_angle: self.settings.use_relative_angle,
 			});
 		}

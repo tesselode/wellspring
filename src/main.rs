@@ -1,8 +1,6 @@
 mod particle_system;
 
-use ggez::{
-	event::KeyCode, graphics, input::keyboard::KeyMods, nalgebra::Point2, Context, GameResult,
-};
+use ggez::{event::KeyCode, graphics, input::keyboard::KeyMods, Context, GameResult};
 use particle_system::*;
 
 struct MainState {
@@ -36,6 +34,8 @@ impl MainState {
 				use_relative_angle: true,
 				min_acceleration_y: 500.0,
 				max_acceleration_y: 500.0,
+				min_radial_acceleration: 10.0,
+				max_radial_acceleration: 20.0,
 				..Default::default()
 			},
 		);

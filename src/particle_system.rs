@@ -22,16 +22,19 @@ struct Particle {
 	velocity_y: f32,
 	acceleration_x: f32,
 	acceleration_y: f32,
+	radial_acceleration: f32,
 	angle: f32,
 	spin: f32,
 }
 
 impl Particle {
-	fn update(&mut self, ctx: &Context) {
+	fn update(&mut self, ctx: &Context, emitter_x: f32, emitter_y: f32) {
 		let delta_time = ggez::timer::delta(ctx).as_secs_f32();
 		self.time += 1.0 / self.lifetime * delta_time;
 		self.velocity_x += self.acceleration_x * delta_time;
 		self.velocity_y += self.acceleration_y * delta_time;
+		self.velocity_x += self.radial_acceleration * (self.x - emitter_x) * delta_time;
+		self.velocity_y += self.radial_acceleration * (self.y - emitter_y) * delta_time;
 		self.x += self.velocity_x * delta_time;
 		self.y += self.velocity_y * delta_time;
 		self.angle += self.spin * delta_time;
@@ -113,6 +116,8 @@ pub struct ParticleSystemSettings {
 	pub min_acceleration_y: f32,
 	pub max_acceleration_x: f32,
 	pub max_acceleration_y: f32,
+	pub min_radial_acceleration: f32,
+	pub max_radial_acceleration: f32,
 }
 
 impl Default for ParticleSystemSettings {
@@ -136,6 +141,8 @@ impl Default for ParticleSystemSettings {
 			min_acceleration_y: 0.0,
 			max_acceleration_x: 0.0,
 			max_acceleration_y: 0.0,
+			min_radial_acceleration: 0.0,
+			max_radial_acceleration: 0.0,
 		}
 	}
 }
@@ -213,6 +220,11 @@ where
 			self.settings.max_acceleration_y,
 			self.rng.gen::<f32>(),
 		);
+		let radial_acceleration = lerp(
+			self.settings.min_radial_acceleration,
+			self.settings.max_radial_acceleration,
+			self.rng.gen::<f32>(),
+		);
 		let spin = lerp(
 			self.settings.min_spin,
 			self.settings.max_spin,
@@ -232,6 +244,7 @@ where
 				velocity_y,
 				acceleration_x,
 				acceleration_y,
+				radial_acceleration,
 				angle: 0.0,
 				spin,
 				use_relative_angle: self.settings.use_relative_angle,
@@ -252,7 +265,7 @@ where
 		// update existing particles
 		for i in (0..self.particles.len()).rev() {
 			let particle = &mut self.particles[i];
-			particle.update(ctx);
+			particle.update(ctx, self.settings.x, self.settings.y);
 			if particle.time >= 1.0 {
 				self.particles.remove(i);
 			}

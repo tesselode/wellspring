@@ -33,8 +33,7 @@ impl MainState {
 				],
 				min_speed: 10.0,
 				max_speed: 100.0,
-				min_spin: -5.0,
-				max_spin: 5.0,
+				use_relative_angle: true,
 				..Default::default()
 			},
 		);

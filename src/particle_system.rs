@@ -14,6 +14,7 @@ struct Particle {
 	lifetime: f32,
 	sizes: Vec<f32>,
 	colors: Vec<Color>,
+	use_relative_angle: bool,
 	time: f32,
 	x: f32,
 	y: f32,
@@ -63,6 +64,14 @@ impl Particle {
 		);
 	}
 
+	fn get_angle(&self) -> f32 {
+		if self.use_relative_angle {
+			self.velocity_y.atan2(self.velocity_x)
+		} else {
+			self.angle
+		}
+	}
+
 	fn draw<D>(&self, ctx: &mut Context, drawable: &D) -> GameResult
 	where
 		D: graphics::Drawable,
@@ -74,7 +83,7 @@ impl Particle {
 			graphics::DrawParam::new()
 				.dest(Point2::new(self.x, self.y))
 				.scale(Vector2::new(size, size))
-				.rotation(self.angle)
+				.rotation(self.get_angle())
 				.offset(Point2::new(0.5, 0.5))
 				.color(self.get_color()),
 		)
@@ -95,6 +104,7 @@ pub struct ParticleSystemSettings {
 	pub colors: Vec<Color>,
 	pub min_spin: f32,
 	pub max_spin: f32,
+	pub use_relative_angle: bool,
 }
 
 impl Default for ParticleSystemSettings {
@@ -113,6 +123,7 @@ impl Default for ParticleSystemSettings {
 			colors: vec![graphics::WHITE],
 			min_spin: 0.0,
 			max_spin: 0.0,
+			use_relative_angle: false,
 		}
 	}
 }
@@ -199,6 +210,7 @@ where
 				velocity_y,
 				angle: 0.0,
 				spin,
+				use_relative_angle: self.settings.use_relative_angle,
 			});
 		}
 	}

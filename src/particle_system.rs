@@ -115,7 +115,7 @@ pub enum EmitterLifetime {
 	Finite(f32),
 }
 
-pub enum EmissionArea {
+pub enum EmitterShape {
 	Point,
 	Rectangle(Vector2<f32>, f32),
 	Ellipse(Vector2<f32>, f32),
@@ -128,7 +128,7 @@ pub struct ParticleSystemSettings {
 	pub emitter_lifetime: EmitterLifetime,
 	pub particle_lifetime: Range<f32>,
 	pub emission_rate: f32,
-	pub emission_area: EmissionArea,
+	pub shape: EmitterShape,
 	pub speed: Range<f32>,
 	pub angle: f32,
 	pub spread: f32,
@@ -148,7 +148,7 @@ impl Default for ParticleSystemSettings {
 			emitter_lifetime: EmitterLifetime::Infinite,
 			particle_lifetime: 1.0..1.0,
 			emission_rate: 10.0,
-			emission_area: EmissionArea::Point,
+			shape: EmitterShape::Point,
 			speed: 10.0..100.0,
 			angle: 0.0,
 			spread: std::f32::consts::PI * 2.0,
@@ -214,19 +214,19 @@ where
 	}
 
 	fn get_particle_position_offset(
-		emission_area: &EmissionArea,
+		emitter_shape: &EmitterShape,
 		rng: &mut ThreadRng,
 	) -> Vector2<f32> {
-		match emission_area {
-			EmissionArea::Point => Vector2::new(0.0, 0.0),
-			EmissionArea::Rectangle(size, angle) => {
+		match emitter_shape {
+			EmitterShape::Point => Vector2::new(0.0, 0.0),
+			EmitterShape::Rectangle(size, angle) => {
 				Rotation2::new(*angle)
 					* Vector2::new(
 						lerp(-size.x / 2.0, size.x / 2.0, rng.gen::<f32>()),
 						lerp(-size.y / 2.0, size.y / 2.0, rng.gen::<f32>()),
 					)
 			}
-			EmissionArea::Ellipse(size, angle) => {
+			EmitterShape::Ellipse(size, angle) => {
 				let particle_angle = 2.0 * std::f32::consts::PI * rng.gen::<f32>();
 				let distance = rng.gen::<f32>();
 				Rotation2::new(*angle)
@@ -235,7 +235,7 @@ where
 						distance * particle_angle.sin() * size.y,
 					)
 			}
-			EmissionArea::RectangleBorder(size, angle) => {
+			EmitterShape::RectangleBorder(size, angle) => {
 				let top_left = Vector2::new(-size.x / 2.0, -size.y / 2.0);
 				let top_right = Vector2::new(size.x / 2.0, -size.y / 2.0);
 				let bottom_right = Vector2::new(size.x / 2.0, size.y / 2.0);
@@ -270,7 +270,7 @@ where
 				};
 				Rotation2::new(*angle) * offset
 			}
-			EmissionArea::EllipseBorder(size, angle) => {
+			EmitterShape::EllipseBorder(size, angle) => {
 				let particle_angle = 2.0 * std::f32::consts::PI * rng.gen::<f32>();
 				Rotation2::new(*angle)
 					* Vector2::new(particle_angle.cos() * size.x, particle_angle.sin() * size.y)
@@ -288,7 +288,7 @@ where
 		let velocity = Vector2::new(speed * angle.cos(), speed * angle.sin());
 		for _ in 0..count {
 			let position = self.settings.position
-				+ Self::get_particle_position_offset(&self.settings.emission_area, &mut self.rng);
+				+ Self::get_particle_position_offset(&self.settings.shape, &mut self.rng);
 			self.particles.push(Particle {
 				sizes: self.settings.sizes.clone(),
 				colors: self.settings.colors.clone(),

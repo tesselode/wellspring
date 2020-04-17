@@ -1,7 +1,8 @@
 use ggez::{
 	graphics,
 	graphics::Color,
-	nalgebra::{Point2, Vector2},
+	nalgebra,
+	nalgebra::{Point2, Rotation2, Vector2, Vector3},
 	Context, GameResult,
 };
 use rand::prelude::*;
@@ -116,10 +117,10 @@ pub enum EmitterLifetime {
 
 pub enum EmissionArea {
 	Point,
-	Rectangle(Vector2<f32>),
-	Ellipse(Vector2<f32>),
-	RectangleBorder(Vector2<f32>),
-	EllipseBorder(Vector2<f32>),
+	Rectangle(Vector2<f32>, f32),
+	Ellipse(Vector2<f32>, f32),
+	RectangleBorder(Vector2<f32>, f32),
+	EllipseBorder(Vector2<f32>, f32),
 }
 
 pub struct ParticleSystemSettings {
@@ -218,19 +219,23 @@ where
 	) -> Vector2<f32> {
 		match emission_area {
 			EmissionArea::Point => Vector2::new(0.0, 0.0),
-			EmissionArea::Rectangle(size) => Vector2::new(
-				lerp(-size.x / 2.0, size.x / 2.0, rng.gen::<f32>()),
-				lerp(-size.y / 2.0, size.y / 2.0, rng.gen::<f32>()),
-			),
-			EmissionArea::Ellipse(size) => {
-				let angle = 2.0 * std::f32::consts::PI * rng.gen::<f32>();
-				let distance = rng.gen::<f32>();
-				Vector2::new(
-					distance * angle.cos() * size.x,
-					distance * angle.sin() * size.y,
-				)
+			EmissionArea::Rectangle(size, angle) => {
+				Rotation2::new(*angle)
+					* Vector2::new(
+						lerp(-size.x / 2.0, size.x / 2.0, rng.gen::<f32>()),
+						lerp(-size.y / 2.0, size.y / 2.0, rng.gen::<f32>()),
+					)
 			}
-			EmissionArea::RectangleBorder(size) => {
+			EmissionArea::Ellipse(size, angle) => {
+				let particle_angle = 2.0 * std::f32::consts::PI * rng.gen::<f32>();
+				let distance = rng.gen::<f32>();
+				Rotation2::new(*angle)
+					* Vector2::new(
+						distance * particle_angle.cos() * size.x,
+						distance * particle_angle.sin() * size.y,
+					)
+			}
+			EmissionArea::RectangleBorder(size, angle) => {
 				let top_left = Vector2::new(-size.x / 2.0, -size.y / 2.0);
 				let top_right = Vector2::new(size.x / 2.0, -size.y / 2.0);
 				let bottom_right = Vector2::new(size.x / 2.0, size.y / 2.0);
@@ -242,7 +247,7 @@ where
 					size.x * 2.0 + size.y * 2.0,
 				];
 				let amount = side_boundaries[3] * rng.gen::<f32>();
-				if amount > side_boundaries[2] {
+				let offset = if amount > side_boundaries[2] {
 					lerp(
 						bottom_left,
 						top_left,
@@ -262,11 +267,13 @@ where
 					)
 				} else {
 					lerp(top_left, top_right, amount / side_boundaries[0])
-				}
+				};
+				Rotation2::new(*angle) * offset
 			}
-			EmissionArea::EllipseBorder(size) => {
-				let angle = 2.0 * std::f32::consts::PI * rng.gen::<f32>();
-				Vector2::new(angle.cos() * size.x, angle.sin() * size.y)
+			EmissionArea::EllipseBorder(size, angle) => {
+				let particle_angle = 2.0 * std::f32::consts::PI * rng.gen::<f32>();
+				Rotation2::new(*angle)
+					* Vector2::new(particle_angle.cos() * size.x, particle_angle.sin() * size.y)
 			}
 		}
 	}

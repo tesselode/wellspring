@@ -20,6 +20,8 @@ struct Particle {
 	y: f32,
 	velocity_x: f32,
 	velocity_y: f32,
+	acceleration_x: f32,
+	acceleration_y: f32,
 	angle: f32,
 	spin: f32,
 }
@@ -28,6 +30,8 @@ impl Particle {
 	fn update(&mut self, ctx: &Context) {
 		let delta_time = ggez::timer::delta(ctx).as_secs_f32();
 		self.time += 1.0 / self.lifetime * delta_time;
+		self.velocity_x += self.acceleration_x * delta_time;
+		self.velocity_y += self.acceleration_y * delta_time;
 		self.x += self.velocity_x * delta_time;
 		self.y += self.velocity_y * delta_time;
 		self.angle += self.spin * delta_time;
@@ -105,6 +109,10 @@ pub struct ParticleSystemSettings {
 	pub min_spin: f32,
 	pub max_spin: f32,
 	pub use_relative_angle: bool,
+	pub min_acceleration_x: f32,
+	pub min_acceleration_y: f32,
+	pub max_acceleration_x: f32,
+	pub max_acceleration_y: f32,
 }
 
 impl Default for ParticleSystemSettings {
@@ -124,6 +132,10 @@ impl Default for ParticleSystemSettings {
 			min_spin: 0.0,
 			max_spin: 0.0,
 			use_relative_angle: false,
+			min_acceleration_x: 0.0,
+			min_acceleration_y: 0.0,
+			max_acceleration_x: 0.0,
+			max_acceleration_y: 0.0,
 		}
 	}
 }
@@ -191,6 +203,16 @@ where
 			self.settings.max_speed,
 			self.rng.gen::<f32>(),
 		);
+		let acceleration_x = lerp(
+			self.settings.min_acceleration_x,
+			self.settings.max_acceleration_x,
+			self.rng.gen::<f32>(),
+		);
+		let acceleration_y = lerp(
+			self.settings.min_acceleration_y,
+			self.settings.max_acceleration_y,
+			self.rng.gen::<f32>(),
+		);
 		let spin = lerp(
 			self.settings.min_spin,
 			self.settings.max_spin,
@@ -208,6 +230,8 @@ where
 				y: self.settings.y,
 				velocity_x,
 				velocity_y,
+				acceleration_x,
+				acceleration_y,
 				angle: 0.0,
 				spin,
 				use_relative_angle: self.settings.use_relative_angle,

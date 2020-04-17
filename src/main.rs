@@ -34,6 +34,8 @@ impl MainState {
 				min_speed: 10.0,
 				max_speed: 100.0,
 				use_relative_angle: true,
+				min_acceleration_y: 500.0,
+				max_acceleration_y: 500.0,
 				..Default::default()
 			},
 		);

@@ -112,6 +112,7 @@ impl Particle {
 pub enum EmissionArea {
 	Point,
 	Rectangle(Vector2<f32>),
+	Ellipse(Vector2<f32>),
 }
 
 pub struct ParticleSystemSettings {
@@ -222,6 +223,15 @@ where
 						self.rng.gen::<f32>(),
 					),
 				),
+				EmissionArea::Ellipse(size) => {
+					let angle = 2.0 * std::f32::consts::PI * self.rng.gen::<f32>();
+					let distance = self.rng.gen::<f32>();
+					self.settings.position
+						+ Vector2::new(
+							distance * angle.cos() * size.x,
+							distance * angle.sin() * size.y,
+						)
+				}
 			};
 			self.particles.push(Particle {
 				sizes: self.settings.sizes.clone(),

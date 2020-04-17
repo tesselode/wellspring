@@ -27,14 +27,14 @@ impl MainState {
 			ParticleSystemSettings {
 				position: Point2::new(400.0, 300.0),
 				particle_lifetime: 0.25..1.0,
-				emission_rate: 100.0,
+				emission_rate: 500.0,
 				colors: vec![
 					graphics::Color::new(1.0, 1.0, 1.0, 1.0),
 					graphics::Color::new(1.0, 0.0, 0.0, 2.0 / 3.0),
 					graphics::Color::new(0.0, 0.0, 1.0, 0.0),
 				],
 				speed: 0.0..0.0,
-				emission_area: EmissionArea::Rectangle(Vector2::new(50.0, 100.0)),
+				emission_area: EmissionArea::Ellipse(Vector2::new(50.0, 100.0)),
 				..Default::default()
 			},
 		);

@@ -6,6 +6,10 @@ use ggez::{
 };
 use rand::prelude::*;
 
+fn lerp(a: f32, b: f32, amount: f32) -> f32 {
+	a + (b - a) * amount
+}
+
 struct Particle {
 	lifetime: f32,
 	sizes: Vec<f32>,
@@ -35,7 +39,7 @@ impl Particle {
 		let size_a = self.sizes[size_index_a];
 		let size_b = self.sizes[size_index_b];
 		let fraction = size_index % 1.0;
-		return size_a + (size_b - size_a) * fraction;
+		lerp(size_a, size_b, fraction)
 	}
 
 	fn get_color(&self) -> Color {
@@ -49,10 +53,10 @@ impl Particle {
 		let color_b = self.colors[color_index_b];
 		let fraction = color_index % 1.0;
 		return Color::new(
-			color_a.r + (color_b.r - color_a.r) * fraction,
-			color_a.g + (color_b.g - color_a.g) * fraction,
-			color_a.b + (color_b.b - color_a.b) * fraction,
-			color_a.a + (color_b.a - color_a.a) * fraction,
+			lerp(color_a.r, color_b.r, fraction),
+			lerp(color_a.g, color_b.g, fraction),
+			lerp(color_a.b, color_b.b, fraction),
+			lerp(color_a.a, color_b.a, fraction),
 		);
 	}
 
@@ -153,14 +157,21 @@ where
 	}
 
 	pub fn emit(&mut self, count: usize) {
-		let lifetime = self.settings.min_particle_lifetime
-			+ (self.settings.max_particle_lifetime - self.settings.min_particle_lifetime)
-				* self.rng.gen::<f32>();
-		let min_angle = self.settings.angle - self.settings.spread / 2.0;
-		let max_angle = self.settings.angle + self.settings.spread / 2.0;
-		let angle = min_angle + (max_angle - min_angle) * self.rng.gen::<f32>();
-		let speed = self.settings.min_speed
-			+ (self.settings.max_speed - self.settings.min_speed) * self.rng.gen::<f32>();
+		let lifetime = lerp(
+			self.settings.min_particle_lifetime,
+			self.settings.max_particle_lifetime,
+			self.rng.gen::<f32>(),
+		);
+		let angle = lerp(
+			self.settings.angle - self.settings.spread / 2.0,
+			self.settings.angle + self.settings.spread / 2.0,
+			self.rng.gen::<f32>(),
+		);
+		let speed = lerp(
+			self.settings.min_speed,
+			self.settings.max_speed,
+			self.rng.gen::<f32>(),
+		);
 		let velocity_x = speed * angle.cos();
 		let velocity_y = speed * angle.sin();
 		for _ in 0..count {

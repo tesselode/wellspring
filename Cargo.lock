@@ -643,14 +643,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "ggez-particle-system"
-version = "0.1.0"
-dependencies = [
- "ggez",
- "rand 0.7.3",
-]
-
-[[package]]
 name = "gif"
 version = "0.10.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2200,6 +2192,14 @@ checksum = "520ab0fd578017a0ee2206623ba9ef4afe5e8f23ca7b42f6acfba2f4e66b1628"
 dependencies = [
  "dlib",
  "lazy_static",
+]
+
+[[package]]
+name = "wellspring"
+version = "0.1.0"
+dependencies = [
+ "ggez",
+ "rand 0.7.3",
 ]
 
 [[package]]

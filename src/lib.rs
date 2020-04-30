@@ -1,3 +1,5 @@
+//! # Wellspring
+//!
 //! A small library for creating particle effects with [ggez](ggez.rs).
 //!
 //! Particle systems in this library work very similarly to particle systems

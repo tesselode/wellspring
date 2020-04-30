@@ -1,5 +1,5 @@
 use ggez::{graphics, nalgebra::Point2, Context, GameResult};
-use ggez_particle_system::*;
+use wellspring::*;
 
 struct MainState {
 	particle_system: ParticleSystem<graphics::Mesh>,

@@ -85,6 +85,7 @@ struct Particle {
     time: f32,
     position: Point2<f32>,
     velocity: Vector2<f32>,
+    damping: f32,
     acceleration: Vector2<f32>,
     radial_acceleration: f32,
     tangential_acceleration: f32,
@@ -104,6 +105,7 @@ impl Particle {
         self.velocity += self.acceleration * delta_time;
         self.velocity += self.radial_acceleration * radial_vector * delta_time;
         self.velocity += self.tangential_acceleration * tangential_vector * delta_time;
+        self.velocity *= 1.0 / (1.0 + self.damping * delta_time);
         self.position += self.velocity * delta_time;
         self.angle += self.spin * delta_time;
     }
@@ -220,6 +222,8 @@ pub struct ParticleSystemSettings {
     /// Whether new particles' angles should always be the same as the
     /// direction of their movement.
     pub use_relative_angle: bool,
+    /// The amount that new particles are slowed down each frame.
+    pub damping: Range<f32>,
     /// The constant acceleration of new particles along the x and y axis.
     pub acceleration: Range<Vector2<f32>>,
     /// The acceleration of new particles relative to the center of the emitter.
@@ -243,6 +247,7 @@ impl Default for ParticleSystemSettings {
             colors: vec![graphics::WHITE],
             spin: 0.0..0.0,
             use_relative_angle: false,
+            damping: 0.0..0.0,
             acceleration: Vector2::new(0.0, 0.0)..Vector2::new(0.0, 0.0),
             radial_acceleration: 0.0..0.0,
             tangential_acceleration: 0.0..0.0,
@@ -398,6 +403,7 @@ where
                 time: 0.0,
                 position,
                 velocity,
+                damping: get_rand_in_range(&self.settings.damping, &mut self.rng),
                 acceleration: get_rand_in_range(&self.settings.acceleration, &mut self.rng),
                 radial_acceleration: get_rand_in_range(
                     &self.settings.radial_acceleration,

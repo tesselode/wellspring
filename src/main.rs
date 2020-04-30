@@ -1,10 +1,4 @@
-use ggez::{
-    event::KeyCode,
-    graphics,
-    input::keyboard::KeyMods,
-    nalgebra::{Point2, Vector2},
-    Context, GameResult,
-};
+use ggez::{graphics, nalgebra::Point2, Context, GameResult};
 use ggez_particle_system::*;
 
 struct MainState {
@@ -32,6 +26,7 @@ impl MainState {
                     graphics::Color::new(0.0, 0.0, 1.0, 0.0),
                 ],
                 speed: 100.0..200.0,
+                damping: 1.0..10.0,
                 spread: std::f32::consts::PI * 2.0,
                 use_relative_angle: true,
                 tangential_acceleration: -200.0..200.0,

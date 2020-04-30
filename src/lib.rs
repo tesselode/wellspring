@@ -1,5 +1,19 @@
 //! A small library for creating particle effects with [ggez](ggez.rs).
 //!
+//! Particle systems in this library work very similarly to particle systems
+//! in [LÖVE](https://www.love2d.org/wiki/ParticleSystem). One notable difference
+//! is that parameter changes to particle systems are only applied to new
+//! particles, not existing ones. So, for example, you can change the colors
+//! or sizes for new particles, and existing particles won't suddenly change
+//! colors or sizes.
+//!
+//! Unlike in LÖVE, particle systems are configured by using a
+//! `ParticleSystemSettings` struct, which is passed into `ParticleSystem::new()`.
+//! Settings can be changed after the fact by modifying `ParticleSystem.settings`.
+//!
+//! Parameters that have a minimum and maximum value are represented
+//! using Rust's range syntax.
+//!
 //! # Example
 //! ```
 //! struct MainState {

@@ -91,6 +91,7 @@ struct Particle {
     tangential_acceleration: f32,
     angle: f32,
     spin: f32,
+    offset: Point2<f32>,
 }
 
 impl Particle {
@@ -161,7 +162,7 @@ impl Particle {
                 .dest(self.position)
                 .scale(Vector2::new(size, size))
                 .rotation(self.get_angle())
-                .offset(Point2::new(0.5, 0.5))
+                .offset(self.offset)
                 .color(self.get_color()),
         )
     }
@@ -230,6 +231,8 @@ pub struct ParticleSystemSettings {
     pub radial_acceleration: Range<f32>,
     /// The acceleration of new particles perpendicular to their current velocity.
     pub tangential_acceleration: Range<f32>,
+    /// The offset for scaling and rotating new particles.
+    pub offset: Point2<f32>,
 }
 
 impl Default for ParticleSystemSettings {
@@ -251,6 +254,7 @@ impl Default for ParticleSystemSettings {
             acceleration: Vector2::new(0.0, 0.0)..Vector2::new(0.0, 0.0),
             radial_acceleration: 0.0..0.0,
             tangential_acceleration: 0.0..0.0,
+            offset: Point2::new(0.5, 0.5),
         }
     }
 }
@@ -416,6 +420,7 @@ where
                 angle: 0.0,
                 spin: get_rand_in_range(&self.settings.spin, &mut self.rng),
                 use_relative_angle: self.settings.use_relative_angle,
+                offset: self.settings.offset,
             });
         }
     }

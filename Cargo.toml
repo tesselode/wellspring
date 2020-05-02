@@ -3,6 +3,10 @@ name = "wellspring"
 version = "0.1.0"
 authors = ["Andrew Minnich <aminnich3@gmail.com>"]
 edition = "2018"
+description = "LÖVE-inspired particle systems for ggez"
+readme = "readme.md"
+repository = "https://github.com/tesselode/wellspring"
+license = "MIT"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

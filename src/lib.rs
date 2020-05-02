@@ -406,14 +406,14 @@ where
 
 	/// Immediately emits the specified number of particles.
 	pub fn emit(&mut self, count: usize) {
-		let angle = lerp(
-			self.settings.angle - self.settings.spread / 2.0,
-			self.settings.angle + self.settings.spread / 2.0,
-			self.rng.gen::<f32>(),
-		);
-		let speed = get_rand_in_range(&self.settings.speed, &mut self.rng);
-		let velocity = Vector2::new(speed * angle.cos(), speed * angle.sin());
 		for _ in 0..count {
+			let angle = lerp(
+				self.settings.angle - self.settings.spread / 2.0,
+				self.settings.angle + self.settings.spread / 2.0,
+				self.rng.gen::<f32>(),
+			);
+			let speed = get_rand_in_range(&self.settings.speed, &mut self.rng);
+			let velocity = Vector2::new(speed * angle.cos(), speed * angle.sin());
 			let position = self.settings.position
 				+ Self::get_particle_position_offset(&self.settings.shape, &mut self.rng);
 			self.particles.push(Particle {

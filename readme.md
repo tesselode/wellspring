@@ -6,7 +6,7 @@
 
 ![](https://i.imgur.com/ka3UzwP.gif)
 
-```rs
+```rust
 let mesh = graphics::Mesh::new_circle(
 	ctx,
 	graphics::DrawMode::fill(),

@@ -186,6 +186,7 @@ impl Particle {
 
 /// The length of time a particle system will keep
 /// emitting particles.
+#[derive(Debug, Clone)]
 pub enum EmitterLifetime {
 	/// The system will emit particles forever.
 	Infinite,
@@ -195,6 +196,7 @@ pub enum EmitterLifetime {
 }
 
 /// The area in which a particle system will emit particles.
+#[derive(Debug, Clone)]
 pub enum EmitterShape {
 	/// The particle system will emit particles at a single point.
 	Point,
@@ -213,6 +215,7 @@ pub enum EmitterShape {
 }
 
 /// A configuration for a `ParticleSystem`.
+#[derive(Debug, Clone)]
 pub struct ParticleSystemSettings {
 	/// The center of the emitter.
 	pub position: Point2<f32>,

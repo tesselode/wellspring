@@ -476,14 +476,10 @@ impl<D> graphics::Drawable for ParticleSystem<D>
 where
 	D: graphics::Drawable,
 {
-	fn draw(&self, ctx: &mut Context, param: graphics::DrawParam) -> GameResult {
-		graphics::push_transform(ctx, Some(param.to_matrix()));
-		graphics::apply_transformations(ctx)?;
+	fn draw(&self, ctx: &mut Context, _param: graphics::DrawParam) -> GameResult {
 		for particle in &self.particles {
 			particle.draw(ctx, &self.drawable)?;
 		}
-		graphics::pop_transform(ctx);
-		graphics::apply_transformations(ctx)?;
 		Ok(())
 	}
 
